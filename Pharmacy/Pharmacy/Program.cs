@@ -49,8 +49,12 @@ namespace Pharmacy
 
 					EditMed(id);
 				}
-				else if (command.ToLower() == "RemoveMed")
+				else if (command.ToLower() == "removemed")
 				{
+					Console.WriteLine("Which Medicine ID do you want to remove?");
+					int id = Int32.Parse(Console.ReadLine());
+
+					RemoveMed(id);
 				}
 				else if (command.ToLower() == "sellmed")
 				{
@@ -234,6 +238,38 @@ namespace Pharmacy
 
 					connection.Open();
 					
+					sqlCommand.ExecuteNonQuery();
+
+					connection.Close();
+				}
+			}
+			catch (Exception e)
+			{
+				Console.WriteLine(e.Message);
+			}
+		}
+		private static void RemoveMed(int id)
+		{
+			try
+			{
+				using (SqlConnection connection = new SqlConnection(connectionString))
+				{
+					var sqlCommand = new SqlCommand();
+					sqlCommand.Connection = connection;
+					sqlCommand.CommandText =
+						@"DELETE FROM Medicines WHERE ID = @id;";
+
+					var sqlIdParam = new SqlParameter
+					{
+						DbType = System.Data.DbType.Int32,
+						Value = id,
+						ParameterName = "@id"
+					};
+
+					sqlCommand.Parameters.Add(sqlIdParam);
+
+					connection.Open();
+
 					sqlCommand.ExecuteNonQuery();
 
 					connection.Close();
