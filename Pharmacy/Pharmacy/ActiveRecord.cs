@@ -7,7 +7,7 @@ namespace Pharmacy
 {
 	public abstract class ActiveRecord
 	{
-		public int ID { get; private set; }
+		public readonly int ID;
 
 
 		public abstract void Save();
@@ -16,7 +16,6 @@ namespace Pharmacy
 
 		protected void Open()
 		{
-
 		}
 
 		protected void Close()

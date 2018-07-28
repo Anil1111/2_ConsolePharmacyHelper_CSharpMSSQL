@@ -8,6 +8,7 @@ namespace Pharmacy
 		static string connectionString = "Integrated Security=SSPI;" +
 								  "Data Source=.\\SQLEXPRESS;" +
 								  "Initial Catalog=Pharmacy;";
+
 		static void Main(string[] args)
 		{
 			Menu.ShowMenu();
@@ -45,7 +46,7 @@ namespace Pharmacy
 			} while (true);
 		}
 
-		private static void AddMed()
+		private static void AddMed(Medicines medicine)
 		{
 			try
 			{
@@ -54,16 +55,55 @@ namespace Pharmacy
 					var sqlCommand = new SqlCommand();
 					sqlCommand.Connection = connection;
 					sqlCommand.CommandText =
-						@"INSERT INTO Rentiers (NazwaLeku)
-                        VALUES (@);";
+						@"INSERT INTO Medicines (Name, Manufacturer, Price, Amount, WithPrescription)
+			                     VALUES (@Name, @Manufacturer, @Price, @Amount, @WithPrescription);";
 
-					var sqlFirstNameParam = new SqlParameter
+					var sqlNameParam = new SqlParameter
 					{
 						DbType = System.Data.DbType.AnsiString,
-						Value = Medicine.FirstName,
-						ParameterName = "@FirstName"
+						Value = medicine.Name,
+						ParameterName = "@Name"
 					};
 
+					var sqlManufacturerParam = new SqlParameter
+					{
+						DbType = System.Data.DbType.AnsiString,
+						Value = medicine.Manufacturer,
+						ParameterName = "@Manufacturer"
+					};
+
+					var sqlPriceParam = new SqlParameter
+					{
+						DbType = System.Data.DbType.Decimal,
+						Value = medicine.Price,
+						ParameterName = "@Price"
+					};
+
+					var sqlAmountParam = new SqlParameter
+					{
+						DbType = System.Data.DbType.Int32,
+						Value = medicine.Amount,
+						ParameterName = "@Amount"
+					};
+
+					var sqlWithPrescriptionParam = new SqlParameter
+					{
+						DbType = System.Data.DbType.Boolean,
+						Value = medicine.WithPrescription,
+						ParameterName = "@WithPrescription"
+					};
+
+					sqlCommand.Parameters.Add(sqlNameParam);
+					sqlCommand.Parameters.Add(sqlManufacturerParam);
+					sqlCommand.Parameters.Add(sqlPriceParam);
+					sqlCommand.Parameters.Add(sqlAmountParam);
+					sqlCommand.Parameters.Add(sqlWithPrescriptionParam);
+
+					connection.Open();
+
+					sqlCommand.ExecuteNonQuery();
+
+					connection.Close();
 				}
 			}
 			catch (Exception e)
