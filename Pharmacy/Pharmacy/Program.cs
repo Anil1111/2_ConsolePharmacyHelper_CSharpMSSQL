@@ -15,6 +15,7 @@ namespace Pharmacy
 
 			do
 			{
+				Console.WriteLine("Write command:");
 				string command = Console.ReadLine();
 
 				if (command.ToLower() == "exit")
@@ -28,7 +29,18 @@ namespace Pharmacy
 				}
 				else if (command.ToLower() == "addmed")
 				{
-					AddMed();
+					Console.WriteLine("Medicine Name:");
+					string name = Console.ReadLine();
+					Console.WriteLine("Manufacturer:");
+					string manufacturer=Console.ReadLine();
+					Console.WriteLine("Price:");
+					decimal price = Decimal.Parse(Console.ReadLine());
+					Console.WriteLine("Amount:");
+					int amount = Int32.Parse(Console.ReadLine());
+					Console.WriteLine("With Prescription?(True/False):");
+					bool withPrescription = bool.Parse(Console.ReadLine());
+
+					AddMed(new Medicines(name,manufacturer,price,amount,withPrescription));
 				}
 				else if (command.ToLower() == "editmed")
 				{
@@ -118,14 +130,20 @@ namespace Pharmacy
 			{
 				using (SqlConnection connection = new SqlConnection(connectionString))
 				{
+
 					var sqlCommand = new SqlCommand();
 					sqlCommand.Connection = connection;
 					sqlCommand.CommandText = @"SELECT * FROM Medicines";
+
+					connection.Open();
+
 					SqlDataReader sqlDataReader = sqlCommand.ExecuteReader();
+
+					
 
 					while (sqlDataReader.Read())
 					{
-						Console.WriteLine(sqlDataReader.GetString(0));
+						Console.WriteLine($"ID: {sqlDataReader.GetInt32(0)} | Name: {sqlDataReader.GetString(1)} | Manufacturer: {sqlDataReader.GetString(2)} | Price: {sqlDataReader.GetDecimal(3)} | Amount: {sqlDataReader.GetInt32(4)}");
 					}
 				}
 			}
