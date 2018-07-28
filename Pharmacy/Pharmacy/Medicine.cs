@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Pharmacy
 {
-	class Medicines : ActiveRecord
+	class Medicine : ActiveRecord
 	{
 		public int ID { get; private set; }
 		public string Name { get; protected set; }
@@ -13,12 +13,12 @@ namespace Pharmacy
 		public int Amount { get; protected set; }
 		public bool WithPrescription { get; set; }
 
-		public Medicines()
+		public Medicine()
 		{
 
 		}
 
-		public Medicines(string name, string manufacturer, decimal price, int amount, bool withPrescription)
+		public Medicine(string name, string manufacturer, decimal price, int amount, bool withPrescription)
 		{
 			Name = name;
 			Manufacturer = manufacturer;

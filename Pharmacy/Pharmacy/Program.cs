@@ -40,12 +40,12 @@ namespace Pharmacy
 					Console.WriteLine("With Prescription?(True/False):");
 					bool withPrescription = bool.Parse(Console.ReadLine());
 
-					AddMed(new Medicines(name, manufacturer, price, amount, withPrescription));
+					AddMed(new Medicine(name, manufacturer, price, amount, withPrescription));
 				}
 				else if (command.ToLower() == "editmed")
 				{
 					Console.WriteLine("Which Medicine ID do you want to edit?");
-					int id =Int32.Parse(Console.ReadLine());
+					int id = Int32.Parse(Console.ReadLine());
 
 					EditMed(id);
 				}
@@ -58,15 +58,15 @@ namespace Pharmacy
 				}
 				else if (command.ToLower() == "sellmed")
 				{
-				}
-				else if (command.ToLower() == "editc")
-				{
+					Console.WriteLine("Which Medicine ID do you want to sell?");
+					int id = Int32.Parse(Console.ReadLine());
+					SellMed(id);
 				}
 
 			} while (true);
 		}
 
-		private static void AddMed(Medicines medicine)
+		private static void AddMed(Medicine medicine)
 		{
 			try
 			{
@@ -131,7 +131,6 @@ namespace Pharmacy
 				Console.WriteLine(e.Message);
 			}
 		}
-
 		private static void ShowAll()
 		{
 			try
@@ -160,12 +159,11 @@ namespace Pharmacy
 				Console.WriteLine(e.Message);
 			}
 		}
-
 		private static void EditMed(int id)
 		{
 			try
 			{
-				
+
 				Console.WriteLine("Medicine Name:");
 				string name = Console.ReadLine();
 				Console.WriteLine("Manufacturer:");
@@ -177,7 +175,7 @@ namespace Pharmacy
 				Console.WriteLine("With Prescription?(True/False):");
 				bool withPrescription = bool.Parse(Console.ReadLine());
 
-				var medicine = new Medicines(name,manufacturer,price,amount,withPrescription);
+				var medicine = new Medicine(name, manufacturer, price, amount, withPrescription);
 
 				using (SqlConnection connection = new SqlConnection(connectionString))
 				{
@@ -237,7 +235,7 @@ namespace Pharmacy
 					sqlCommand.Parameters.Add(sqlWithPrescriptionParam);
 
 					connection.Open();
-					
+
 					sqlCommand.ExecuteNonQuery();
 
 					connection.Close();
@@ -267,6 +265,62 @@ namespace Pharmacy
 					};
 
 					sqlCommand.Parameters.Add(sqlIdParam);
+
+					connection.Open();
+
+					sqlCommand.ExecuteNonQuery();
+
+					connection.Close();
+				}
+			}
+			catch (Exception e)
+			{
+				Console.WriteLine(e.Message);
+			}
+		}
+		private static void SellMed(int id)
+		{
+			try
+			{
+				Console.WriteLine("How much do you want to sell?:");
+				int amount = Int32.Parse(Console.ReadLine());
+				int Id = id;
+				DateTime date = DateTime.Now;
+
+				var order = new Order(null, Id, date, amount);
+
+				using (SqlConnection connection = new SqlConnection(connectionString))
+				{
+					var sqlCommand = new SqlCommand();
+					sqlCommand.Connection = connection;
+					sqlCommand.CommandText =
+						@"INSERT INTO Orders (MedicineId, Date, Amount) 
+						VALUES (@MedicineId, @Date, @Amount)";
+
+					var sqlIdParam = new SqlParameter
+					{
+						DbType = System.Data.DbType.Int32,
+						Value = id,
+						ParameterName = "@MedicineId"
+					};
+
+					var sqlDateParam = new SqlParameter
+					{
+						DbType = System.Data.DbType.DateTime,
+						Value = order.Date,
+						ParameterName = "@Date"
+					};
+
+					var sqlAmountParam = new SqlParameter
+					{
+						DbType = System.Data.DbType.Int32,
+						Value = order.Amount,
+						ParameterName = "@Amount"
+					};
+
+					sqlCommand.Parameters.Add(sqlIdParam);
+					sqlCommand.Parameters.Add(sqlDateParam);
+					sqlCommand.Parameters.Add(sqlAmountParam);
 
 					connection.Open();
 
