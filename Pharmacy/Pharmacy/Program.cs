@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Data.SqlClient;
+using System.Runtime.CompilerServices;
+using System.Security.Cryptography.X509Certificates;
 
 namespace Pharmacy
 {
@@ -60,7 +62,12 @@ namespace Pharmacy
 				{
 					Console.WriteLine("Which Medicine ID do you want to sell?");
 					int id = Int32.Parse(Console.ReadLine());
-					SellMed(id);
+
+					//if (PrescriptionChecker(id))
+					//{
+					//	SellMedWithPrescription(id);
+					//}
+					SellMedWithoutPrescription(id);
 				}
 
 			} while (true);
@@ -122,8 +129,6 @@ namespace Pharmacy
 					connection.Open();
 
 					sqlCommand.ExecuteNonQuery();
-
-					connection.Close();
 				}
 			}
 			catch (Exception e)
@@ -146,9 +151,7 @@ namespace Pharmacy
 
 					SqlDataReader sqlDataReader = sqlCommand.ExecuteReader();
 
-
-
-					while (sqlDataReader.Read())
+					while (sqlDataReader.HasRows && sqlDataReader.Read())
 					{
 						Console.WriteLine($"ID: {sqlDataReader.GetInt32(0)} | Name: {sqlDataReader.GetString(1)} | Manufacturer: {sqlDataReader.GetString(2)} | Price: {sqlDataReader.GetDecimal(3)} | Amount: {sqlDataReader.GetInt32(4)} | WithPrescription: {sqlDataReader.GetString(5)}");
 					}
@@ -269,8 +272,6 @@ namespace Pharmacy
 					connection.Open();
 
 					sqlCommand.ExecuteNonQuery();
-
-					connection.Close();
 				}
 			}
 			catch (Exception e)
@@ -278,7 +279,7 @@ namespace Pharmacy
 				Console.WriteLine(e.Message);
 			}
 		}
-		private static void SellMed(int id)
+		private static void SellMedWithoutPrescription(int id)
 		{
 			try
 			{
@@ -333,6 +334,111 @@ namespace Pharmacy
 			{
 				Console.WriteLine(e.Message);
 			}
+		}
+
+		//private static void SellMedWithPrescription(int id)
+		//{
+		//	try
+		//	{
+		//		Console.WriteLine("How much do you want to sell?:");
+		//		int amount = Int32.Parse(Console.ReadLine());
+		//		int Id = id;
+		//		DateTime date = DateTime.Now;
+
+		//		var order = new Order(null, Id, date, amount);
+
+		//		var prescription = new Prescription(customerName, pesel, medAmount);
+
+		//		using (SqlConnection connection = new SqlConnection(connectionString))
+		//		{
+		//			var sqlCommand = new SqlCommand();
+		//			sqlCommand.Connection = connection;
+		//			sqlCommand.CommandText =
+		//				@"INSERT INTO Orders (MedicineId, Date, Amount) 
+		//				VALUES (@MedicineId, @Date, @Amount); SELECT CAST(scope_identity() AS int;"; 
+
+		//			var sqlIdParam = new SqlParameter
+		//			{
+		//				DbType = System.Data.DbType.Int32,
+		//				Value = id,
+		//				ParameterName = "@MedicineId"
+		//			};
+
+		//			var sqlDateParam = new SqlParameter
+		//			{
+		//				DbType = System.Data.DbType.DateTime,
+		//				Value = order.Date,
+		//				ParameterName = "@Date"
+		//			};
+
+		//			var sqlAmountParam = new SqlParameter
+		//			{
+		//				DbType = System.Data.DbType.Int32,
+		//				Value = order.Amount,
+		//				ParameterName = "@Amount"
+		//			};
+
+		//			sqlCommand.Parameters.Add(sqlIdParam);
+		//			sqlCommand.Parameters.Add(sqlDateParam);
+		//			sqlCommand.Parameters.Add(sqlAmountParam);
+
+		//			connection.Open();
+
+		//			int addedOrderId = (int)sqlCommand.ExecuteScalar();
+
+		//			var sqlCommand2 = new SqlCommand();
+		//			sqlCommand2.Connection = connection;
+		//			sqlCommand2.CommandText =
+		//				@"INSERT INTO Prescriptions (MedicineId, Date, Amount) 
+		//				VALUES (@MedicineId, @Date, @Amount); SELECT CAST(scope_identity() AS int;";
+
+
+		//			sqlCommand.ExecuteNonQuery();
+
+		//			connection.Close();
+		//		}
+		//	}
+		//	catch (Exception e)
+		//	{
+		//		Console.WriteLine(e.Message);
+		//	}
+		//}
+
+		private static bool PrescriptionChecker(int id)
+		{
+			try
+			{
+				using (SqlConnection connection = new SqlConnection(connectionString))
+				{
+					var sqlCommand = new SqlCommand();
+					sqlCommand.Connection = connection;
+					sqlCommand.CommandText =
+						@"SELECT FROM Medicines WHERE ID = @id;";
+
+					var sqlIdParam = new SqlParameter
+					{
+						DbType = System.Data.DbType.Int32,
+						Value = id,
+						ParameterName = "@id"
+					};
+
+					sqlCommand.Parameters.Add(sqlIdParam);
+
+					connection.Open();
+
+					SqlDataReader sqlDataReader = sqlCommand.ExecuteReader();
+
+					while (sqlDataReader.HasRows && sqlDataReader.Read())
+					{
+						return sqlDataReader.GetBoolean(5);
+					}
+				}
+			}
+			catch (Exception e)
+			{
+				Console.WriteLine(e.Message);
+			}
+			return false;
 		}
 	}
 }
