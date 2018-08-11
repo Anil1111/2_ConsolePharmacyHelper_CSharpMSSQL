@@ -16,6 +16,8 @@ namespace Pharmacy
 
 		protected void Open()
 		{
+
+
 		}
 
 		protected void Close()

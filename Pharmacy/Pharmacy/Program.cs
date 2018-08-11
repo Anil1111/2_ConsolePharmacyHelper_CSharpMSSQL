@@ -63,10 +63,10 @@ namespace Pharmacy
 					Console.WriteLine("Which Medicine ID do you want to sell?");
 					int id = Int32.Parse(Console.ReadLine());
 
-					//if (PrescriptionChecker(id))
-					//{
-					//	SellMedWithPrescription(id);
-					//}
+					if (PrescriptionChecker(id))
+					{
+					SellMedWithPrescription(id);
+					}
 					SellMedWithoutPrescription(id);
 				}
 
@@ -327,6 +327,123 @@ namespace Pharmacy
 
 					sqlCommand.ExecuteNonQuery();
 
+					EditAmountForOders(id, amount);
+
+					connection.Close();
+				}
+			}
+			catch (Exception e)
+			{
+				Console.WriteLine(e.Message);
+			}
+
+		}
+
+		private static void SellMedWithPrescription(int id)
+		{
+			try
+			{
+				Console.WriteLine("How much do you want to sell?:");
+				int amount = Int32.Parse(Console.ReadLine());
+				int Id = id;
+				DateTime date = DateTime.Now;
+
+				var order = new Order(null, Id, date, amount);
+
+				Console.WriteLine("Podaj dane recepty:");
+				Console.WriteLine("Imię i nazwisko:");
+				string customerName = Console.ReadLine();
+
+				Console.WriteLine("Pesel:");
+				string pesel = Console.ReadLine();
+
+				Console.WriteLine("Numer recepty:");
+				int prescriptionNumber = Int32.Parse(Console.ReadLine());
+
+
+				var prescription = new Prescription(customerName, pesel, prescriptionNumber);
+
+				using (SqlConnection connection = new SqlConnection(connectionString))
+				{
+
+					var sqlCommand = new SqlCommand();
+					sqlCommand.Connection = connection;
+					sqlCommand.CommandText =
+						@"INSERT INTO Prescriptions (CustomerName, PESEL, PrescriptionNumber) 
+						VALUES (@CustomerName, @PESEL, @PrescriptionNumber); SELECT SCOPE_IDENTITY();";
+
+					var sqlCustomerNameParam = new SqlParameter
+					{
+						DbType = System.Data.DbType.String,
+						Value = prescription.CustomerName,
+						ParameterName = "@CustomerName"
+					};
+
+					var sqlPeselParam = new SqlParameter
+					{
+						DbType = System.Data.DbType.String,
+						Value = prescription.Pesel,
+						ParameterName = "@PESEL"
+					};
+
+					var sqlPresciptionNumberParam = new SqlParameter
+					{
+						DbType = System.Data.DbType.Int32,
+						Value = prescription.PrescriptionNumber,
+						ParameterName = "@PrescriptionNumber"
+					};
+
+					sqlCommand.Parameters.Add(sqlCustomerNameParam);
+					sqlCommand.Parameters.Add(sqlPeselParam);
+					sqlCommand.Parameters.Add(sqlPresciptionNumberParam);
+
+					connection.Open();
+
+					var addedPrescriptionId = sqlCommand.ExecuteScalar();
+
+					sqlCommand = new SqlCommand();
+					sqlCommand.Connection = connection;
+					sqlCommand.CommandText =
+						@"INSERT INTO Orders (PrescriptionId, MedicineId, Date, Amount) 
+						VALUES (@PrescriptionId, @MedicineId, @Date, @Amount);";
+
+					var sqlPrescIdParam = new SqlParameter
+					{
+						DbType = System.Data.DbType.Int32,
+						Value = addedPrescriptionId,
+						ParameterName = "@PrescriptionId"
+					};
+
+					var sqlIdParam = new SqlParameter
+					{
+						DbType = System.Data.DbType.Int32,
+						Value = id,
+						ParameterName = "@MedicineId"
+					};
+
+					var sqlDateParam = new SqlParameter
+					{
+						DbType = System.Data.DbType.DateTime,
+						Value = order.Date,
+						ParameterName = "@Date"
+					};
+
+					var sqlAmountParam = new SqlParameter
+					{
+						DbType = System.Data.DbType.Int32,
+						Value = order.Amount,
+						ParameterName = "@Amount"
+					};
+
+					sqlCommand.Parameters.Add(sqlIdParam);
+					sqlCommand.Parameters.Add(sqlDateParam);
+					sqlCommand.Parameters.Add(sqlAmountParam);
+					sqlCommand.Parameters.Add(sqlPrescIdParam);
+
+					sqlCommand.ExecuteNonQuery();
+
+					EditAmountForOders(id, amount);
+
 					connection.Close();
 				}
 			}
@@ -336,76 +453,9 @@ namespace Pharmacy
 			}
 		}
 
-		//private static void SellMedWithPrescription(int id)
-		//{
-		//	try
-		//	{
-		//		Console.WriteLine("How much do you want to sell?:");
-		//		int amount = Int32.Parse(Console.ReadLine());
-		//		int Id = id;
-		//		DateTime date = DateTime.Now;
-
-		//		var order = new Order(null, Id, date, amount);
-
-		//		var prescription = new Prescription(customerName, pesel, medAmount);
-
-		//		using (SqlConnection connection = new SqlConnection(connectionString))
-		//		{
-		//			var sqlCommand = new SqlCommand();
-		//			sqlCommand.Connection = connection;
-		//			sqlCommand.CommandText =
-		//				@"INSERT INTO Orders (MedicineId, Date, Amount) 
-		//				VALUES (@MedicineId, @Date, @Amount); SELECT CAST(scope_identity() AS int;"; 
-
-		//			var sqlIdParam = new SqlParameter
-		//			{
-		//				DbType = System.Data.DbType.Int32,
-		//				Value = id,
-		//				ParameterName = "@MedicineId"
-		//			};
-
-		//			var sqlDateParam = new SqlParameter
-		//			{
-		//				DbType = System.Data.DbType.DateTime,
-		//				Value = order.Date,
-		//				ParameterName = "@Date"
-		//			};
-
-		//			var sqlAmountParam = new SqlParameter
-		//			{
-		//				DbType = System.Data.DbType.Int32,
-		//				Value = order.Amount,
-		//				ParameterName = "@Amount"
-		//			};
-
-		//			sqlCommand.Parameters.Add(sqlIdParam);
-		//			sqlCommand.Parameters.Add(sqlDateParam);
-		//			sqlCommand.Parameters.Add(sqlAmountParam);
-
-		//			connection.Open();
-
-		//			int addedOrderId = (int)sqlCommand.ExecuteScalar();
-
-		//			var sqlCommand2 = new SqlCommand();
-		//			sqlCommand2.Connection = connection;
-		//			sqlCommand2.CommandText =
-		//				@"INSERT INTO Prescriptions (MedicineId, Date, Amount) 
-		//				VALUES (@MedicineId, @Date, @Amount); SELECT CAST(scope_identity() AS int;";
-
-
-		//			sqlCommand.ExecuteNonQuery();
-
-		//			connection.Close();
-		//		}
-		//	}
-		//	catch (Exception e)
-		//	{
-		//		Console.WriteLine(e.Message);
-		//	}
-		//}
-
 		private static bool PrescriptionChecker(int id)
 		{
+			bool validator = false;
 			try
 			{
 				using (SqlConnection connection = new SqlConnection(connectionString))
@@ -413,7 +463,7 @@ namespace Pharmacy
 					var sqlCommand = new SqlCommand();
 					sqlCommand.Connection = connection;
 					sqlCommand.CommandText =
-						@"SELECT FROM Medicines WHERE ID = @id;";
+						@"SELECT * FROM Medicines WHERE ID = @id;";
 
 					var sqlIdParam = new SqlParameter
 					{
@@ -430,15 +480,93 @@ namespace Pharmacy
 
 					while (sqlDataReader.HasRows && sqlDataReader.Read())
 					{
-						return sqlDataReader.GetBoolean(5);
+						string validatorTemp = sqlDataReader.GetString(5);
+
+						if (validatorTemp != "0")
+						{
+							validator = true;
+						}
 					}
+
+					
+				}
+			}
+			catch (Exception e)
+			{
+				Console.WriteLine(e.Message);
+				return false;
+			}
+
+			return validator;
+		}
+
+		private static void EditAmountForOders(int id, int amount)
+		{
+			int actualAmount = 0;
+			try
+			{
+				using (SqlConnection connection = new SqlConnection(connectionString))
+				{
+					
+					var sqlCommand = new SqlCommand();
+					sqlCommand.Connection = connection;
+					sqlCommand.CommandText =
+						@"SELECT * FROM Medicines WHERE ID = @id;";
+
+					var sqlIdParam = new SqlParameter
+					{
+						DbType = System.Data.DbType.Int32,
+						Value = id,
+						ParameterName = "@id"
+					};
+					sqlCommand.Parameters.Add(sqlIdParam);
+
+					connection.Open();
+
+					SqlDataReader sqlDataReader = sqlCommand.ExecuteReader();
+
+					while (sqlDataReader.HasRows && sqlDataReader.Read())
+					{
+						actualAmount = sqlDataReader.GetInt32(4);
+					}
+					actualAmount = actualAmount - amount;
+
+					connection.Close();
+					connection.Open();
+
+					sqlCommand = new SqlCommand();
+					sqlCommand.Connection = connection;
+					sqlCommand.CommandText =
+						@"UPDATE Medicines SET Amount = @Amount
+			                     WHERE ID = @id;";
+
+					sqlIdParam = new SqlParameter
+					{
+						DbType = System.Data.DbType.Int32,
+						Value = id,
+						ParameterName = "@id"
+					};
+
+					var sqlAmountParam = new SqlParameter
+					{
+						DbType = System.Data.DbType.Int32,
+						Value = actualAmount,
+						ParameterName = "@Amount"
+					};
+
+					sqlCommand.Parameters.Add(sqlIdParam);
+					sqlCommand.Parameters.Add(sqlAmountParam);
+
+					sqlCommand.ExecuteNonQuery();
+
+					connection.Close();
 				}
 			}
 			catch (Exception e)
 			{
 				Console.WriteLine(e.Message);
 			}
-			return false;
+
 		}
 	}
 }

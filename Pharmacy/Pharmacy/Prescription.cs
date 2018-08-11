@@ -9,12 +9,12 @@ namespace Pharmacy
 
 		public string CustomerName { get; set; }
 		public string Pesel { get; set; }
-		public string Amount { get; set; }
-		public Prescription(string customerName, string pesel, string amount)
+		public int PrescriptionNumber { get; set; }
+		public Prescription(string customerName, string pesel, int prescriptionNumber)
 		{
 			CustomerName = customerName;
 			Pesel = pesel;
-			Amount = amount;
+			PrescriptionNumber = prescriptionNumber;
 		}
 
 		public override void Save()
